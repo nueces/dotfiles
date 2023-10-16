@@ -1,0 +1,109 @@
+[user]
+    name = 
+    email = 
+
+[core]
+  excludesfile = ~/.config/git/ignore
+  autocrlf = input
+	editor = vim
+#  hooksPath = ~/.config/git/hooks
+
+[init]
+    templatedir = ~/.config/git/templates
+	defaultBranch = master
+
+[commit]
+    verbose = true
+    template = ~/.config/git/commit_template
+
+[merge]
+    tool = meld
+
+[push]
+    default = simple
+
+[pull]
+    rebase = true
+
+[color]
+    diff = auto
+    status = auto
+    branch = auto
+
+[diff]
+    color = true
+
+[alias]
+    # aliases prefixed with ! run in /bin/sh make sure you use sh syntax, not bash/zsh or whatever
+
+    st = status
+    ci = commit
+    br = branch
+    co = checkout
+    df = diff
+
+    ls  = ls-files
+    gls = ls-files
+
+    gdiff  = "diff"
+    gd     = "diff"
+    cached = "diff --cached"
+    gdc    = "diff --cached"
+
+    amend = "!f() { git commit --amend --no-edit; }; f"
+
+    push-set-upstream = "!f() { git push --set-upstream origin $(git symbolic-ref --short HEAD); }; f"
+    push-sup 	      = push-set-upstream
+    sup               = push-set-upstream
+
+    bname = rev-parse --abbrev-ref HEAD
+    root  = rev-parse --show-toplevel
+
+    cmerge = merge --no-ff
+
+    log-diff = log -p -m --first-parent
+    log-graph = log --graph --decorate --pretty=oneline --abbrev-commit
+    #log-commits = log --pretty=format:'* %s'\\n%N
+    log-commits = log --pretty=format:'* %s' --reverse master..
+
+
+    bclean = "!f() { git branch --merged ${1-master} | grep -v '${1-master}$' | xargs -r git branch -d; }; f"
+
+    remote-set-ssh   = "!f() { git remote set-url origin git@github.com:$(git remote get-url origin | sed -e 's|https://github.com/||' -e 's|git@github.com:||'); }; f"
+    remote-set-https = "!f() { git remote set-url origin  https://github.com/$(git remote get-url origin | sed -e 's|https://github.com/||' -e 's|git@github.com:||'); }; f"
+
+
+    br-ls = "!f() { \
+        refbranch=$1; \
+        count=$2;  \
+        git for-each-ref --sort=-committerdate refs/heads \
+            --format='%(refname:short)|%(HEAD)%(color:yellow)%(refname:short)|%(color:bold green)%(committerdate:relative)|%(color:blue)%(subject)|%(color:magenta)%(authorname)%(color:reset)' \
+            --color=always --count=${count:-20} \
+            | while read line; do \
+                branch=$(echo \"$line\" | awk 'BEGIN { FS = \"|\" }; { print $1 }' | tr -d '*'); \
+                ahead=$(git rev-list --count \"${refbranch:-master}..${branch}\"); \
+                behind=$(git rev-list --count \"${branch}..${refbranch:-master}\"); \
+                colorline=$(echo \"$line\" | sed 's/^[^|]*|//'); \
+                echo \"$ahead|$behind|$colorline\" | awk -F'|' -vOFS='|' '{$5=substr($5,1,70)}1' ; \
+              done \
+            | ( echo \"ahead|behind|branch|last-commit|message|author\\n\" && cat) \
+            | column -ts'|'; \
+    }; f"
+    bls = br-ls
+
+    open-pull-request-github = "!f() { \
+        open \"$(git ls-remote --get-url $(git config --get branch.$(git rev-parse --abbrev-ref HEAD).remote) \
+        | sed 's|git@github.com:\\(.*\\)$|https://github.com/\\1|' \
+        | sed 's|\\.git$||'; \
+        )/compare/$(\
+        git config --get branch.$(git rev-parse --abbrev-ref HEAD).merge | cut -d '/' -f 3- \
+        )?expand=1\"; \
+    }; f"
+
+    pr = open-pull-request-github
+
+    auto-rm = "!f() { git status -s | grep ^?? | cut -d' ' -f2 | xargs rm -rfv; }; f"
+
+#[credential]
+#	helper = store
+
